@@ -13,9 +13,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
 public class MainActivity extends AppCompatActivity {
-    private int initialWidth;
-    private int initialHeight;
-    private MyImageView mImageView;
+    private int mInitialViewWidth;
+    private int mInitialViewHeight;
+    private int mMaxViewWidth;
+    private int mMaxViewHeight;
+    private ViewGroup mImageWrapper;
     private int mLockDirection = DIRECTIONAL_LOCK_NOT_SET;
     private TextView mDirection;
     private int mTouchSlop;
@@ -26,25 +28,25 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         mTouchSlop = ViewConfiguration.get(this).getScaledTouchSlop();
 
-        mImageView = findViewById(R.id.imageView);
+        mImageWrapper = findViewById(R.id.imageWrapper);
+        MyImageView imageView = findViewById(R.id.imageView);
         mDirection = findViewById(R.id.direction);
 
         View verticalLine = findViewById(R.id.verticalLine);
-        View horizontalLine = findViewById(R.id.horizontalLine);
-
         ConstraintLayout.LayoutParams lp = (ConstraintLayout.LayoutParams) verticalLine.getLayoutParams();
         PointF focalPoint = new PointF();
         focalPoint.x = lp.horizontalBias;
 
-        lp = (ConstraintLayout.LayoutParams) horizontalLine.getLayoutParams();
+        View horiontalLine = findViewById(R.id.horizontalLine);
+        lp = (ConstraintLayout.LayoutParams) horiontalLine.getLayoutParams();
         focalPoint.y = lp.verticalBias;
-        mImageView.setFocalPoint(focalPoint);
+        imageView.setFocalPoint(focalPoint);
 
         if (focalPoint.x == 0.5f && focalPoint.y == 0.5f) {
-            mImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
         }
 
-        mImageView.setOnTouchListener(new View.OnTouchListener() {
+        imageView.setOnTouchListener(new View.OnTouchListener() {
             float mLastX;
             float mLastY;
 
@@ -60,9 +62,6 @@ public class MainActivity extends AppCompatActivity {
                         break;
 
                     case MotionEvent.ACTION_MOVE:
-                        if (mImageView.getWidth() <= 0) {
-                            return false;
-                        }
                         float deltaX = event.getX() - mLastX;
                         float deltaY = event.getY() - mLastY;
                         if (mLockDirection == DIRECTIONAL_LOCK_NOT_SET &&
@@ -76,10 +75,10 @@ public class MainActivity extends AppCompatActivity {
                             }
                         }
                         if (mLockDirection == DIRECTIONAL_LOCK_HORIZONTAL) {
-                            changeViewSize(v, (int) deltaX, 0);
+                            changeViewSize(mImageWrapper, (int) deltaX, 0);
                             mLastX = event.getX();
                         } else if (mLockDirection == DIRECTIONAL_LOCK_VERTICAL) {
-                            changeViewSize(v, 0, (int) deltaY);
+                            changeViewSize(mImageWrapper, 0, (int) deltaY);
                             mLastY = event.getY();
                         }
                         break;
@@ -95,27 +94,33 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             }
         });
-        findViewById(R.id.layout).post(new Runnable() {
+        final ViewGroup layout = findViewById(R.id.layout);
+        layout.post(new Runnable() {
             @Override
             public void run() {
-                initialWidth = mImageView.getWidth();
-                initialHeight = mImageView.getHeight();
+                mInitialViewWidth = mImageWrapper.getWidth();
+                mInitialViewHeight = mImageWrapper.getHeight();
+                mMaxViewWidth = layout.getWidth() - layout.getPaddingStart() - layout.getPaddingEnd();
+                mMaxViewHeight = layout.getHeight() - layout.getPaddingTop() - layout.getPaddingBottom();
             }
         });
     }
 
-    private void changeViewSize(View view, int w, int h) {
+    private void changeViewSize(View view, int deltaW, int deltaH) {
+        // ConstraintLayout doesn't restrict the view size to the size of the ConstraintLayout
+        // while RelativeLayout and other ViewGroups do. Make sure the image size fits within
+        // the ViewGroup and is not negative.
         ViewGroup.LayoutParams lp = view.getLayoutParams();
-        lp.width = Math.max(0, lp.width + w);
-        lp.height = Math.max(0, lp.height + h);
+        lp.width = Math.min(mMaxViewWidth, Math.max(0, lp.width + deltaW));
+        lp.height = Math.min(mMaxViewHeight, Math.max(0, lp.height + deltaH));
         view.setLayoutParams(lp);
     }
 
     public void resetSize(View view) {
-        ViewGroup.LayoutParams lp = mImageView.getLayoutParams();
-        lp.width = initialWidth;
-        lp.height = initialHeight;
-        mImageView.setLayoutParams(lp);
+        ViewGroup.LayoutParams lp = mImageWrapper.getLayoutParams();
+        lp.width = mInitialViewWidth;
+        lp.height = mInitialViewHeight;
+        mImageWrapper.setLayoutParams(lp);
         mDirection.setText(getString(R.string.not_selected));
     }
 
