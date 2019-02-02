@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Demo Alternate Crop</string>
+    <string name="reset">Reset</string>
+    <string name="vertical">Vertical</string>
+    <string name="horizontal">Horizontal</string>
+    <string name="not_selected">Not selected</string>
+    <string name="directional_lock">Directional lock:</string>
+</resources>
