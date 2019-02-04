@@ -1,5 +1,7 @@
 <h2>Demo Alternate Crop</h2>
 
+There is an augmented version of this app at [ScaleTypeExplorer](https://github.com/Cheticamp/ScaleTypeExplorer).
+
 This is the source project for the demo app shown in
 [this answer](https://stackoverflow.com/a/54278884/6287910)  to
 [this Stack Overflow question](https://stackoverflow.com/questions/54216273/how-to-have-similar-mechanism-of-center-crop-on-exoplayers-playerview-but-not).
